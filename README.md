@@ -1,3 +1,9 @@
+# Run Demo
+In terminal run: 
+1. `g++ main.cpp -o main`
+2. Windows: `main.exe`
+   Mac/Linux: `./main.exe`
+
 # B-Tree
 A B-tree is a self-balancing tree data structure that maintains sorted data and allows searches, sequential access, insertions, and deletions in logarithmic time. It is commonly used in databases and file systems to efficiently manage large blocks of data.
 
