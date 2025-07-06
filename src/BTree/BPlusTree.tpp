@@ -5,17 +5,18 @@
 
 template <typename T, typename Data, int CHILDREN>
 BPlusTree<T, Data, CHILDREN>::BPlusTree() {
+    root = new Node(true);  // root is initially a leaf
 }
 
 template <typename T, typename Data, int CHILDREN>
 void BPlusTree<T, Data, CHILDREN>::insert(T key, Data value) {
-    std::cout << "INSERT";
+    std::cout << "INSERTING " << key << "\n";
 
     Node* node = root;
     Node* parent = nullptr;
     std::vector<Node*> path;
 
-    // Traverse to the appropriate leaf
+    // Traverse to leaf
     while (!node->isLeaf) 
     {
         path.push_back(node);
@@ -24,44 +25,50 @@ void BPlusTree<T, Data, CHILDREN>::insert(T key, Data value) {
         {
             i++;
         }
+
         parent = node;
         node = node->children[i];
     }
 
-    // Insert in leaf
+
+    // Find insert position
     int i = 0;
     while (i < node->numKeys && key > node->keys[i]) 
     {
         i++;
     }
 
+
+    // Shift keys and values
     for (int j = node->numKeys; j > i; --j) 
     {
-        node->keys[j] = node->keys[j - 1];
-        node->values[j] = node->values[j - 1];
+        if (j < CHILDREN - 1) {
+            node->keys[j] = node->keys[j - 1];
+            node->values[j] = node->values[j - 1];
+        }
     }
+
     node->keys[i] = key;
     node->values[i] = value;
     node->numKeys++;
 
-    // Split if needed
+    // Split leaf if needed
     if (node->numKeys == CHILDREN) 
     {
         Node* newLeaf = new Node(true);
-        int mid = (CHILDREN - 1) / 2;
+        int mid = (CHILDREN) / 2;
 
         newLeaf->numKeys = node->numKeys - mid;
-        for (int i = 0; i < newLeaf->numKeys; ++i) 
+        for (int k = 0; k < newLeaf->numKeys; ++k) 
         {
-            newLeaf->keys[i] = node->keys[mid + i];
-            newLeaf->values[i] = node->values[mid + i];
+            newLeaf->keys[k] = node->keys[mid + k];
+            newLeaf->values[k] = node->values[mid + k];
         }
 
         node->numKeys = mid;
         newLeaf->nextLeaf = node->nextLeaf;
         node->nextLeaf = newLeaf;
 
-        // Propagate up
         T splitKey = newLeaf->keys[0];
 
         if (node == root) 
@@ -75,7 +82,6 @@ void BPlusTree<T, Data, CHILDREN>::insert(T key, Data value) {
         } 
         else 
         {
-            // Insertion to internal node (simplified 1-level up logic)
             Node* current = path.back(); path.pop_back();
             int idx = 0;
             while (idx < current->numKeys && splitKey > current->keys[idx]) 
@@ -85,16 +91,17 @@ void BPlusTree<T, Data, CHILDREN>::insert(T key, Data value) {
 
             for (int j = current->numKeys; j > idx; --j) 
             {
-                current->keys[j] = current->keys[j - 1];
-                current->children[j + 1] = current->children[j];
+                if (j < CHILDREN - 1) current->keys[j] = current->keys[j - 1];
+                if (j + 1 < CHILDREN) current->children[j + 1] = current->children[j];
             }
+
             current->keys[idx] = splitKey;
             current->children[idx + 1] = newLeaf;
             current->numKeys++;
         }
     }
 
-    std::cout << "INSERTED";
+    std::cout << "INSERTED\n";
 }
 
 template <typename T, typename Data, int CHILDREN>
