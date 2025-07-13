@@ -19,7 +19,11 @@ int main() {
     tree.insert(15, 150);  // Causes leaf split
     tree.insert(25, 250);  // Causes internal split if enough
 
-    tree.display();
+    try {
+        tree.display();
+    } catch (const std::exception& e) {
+        std::cerr << "Display crashed: " << e.what() << std::endl;
+    }
 
     // // Map string input to function
     // std::unordered_map<std::string, std::function<void()>> commands = {

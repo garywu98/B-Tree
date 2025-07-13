@@ -10,15 +10,17 @@ template <typename T, typename Data, int CHILDREN>
 class TreeNode
 {
 public:
-    T keys[CHILDREN - 1];
-    TreeNode* children[CHILDREN];
+    T keys[CHILDREN];
+    TreeNode* children[CHILDREN + 1];
     TreeNode* nextLeaf;
-    Data values[CHILDREN - 1];
+    Data values[CHILDREN];
     int numKeys;
     bool isLeaf;
 
     TreeNode(bool isLeaf) : numKeys(0), isLeaf(isLeaf), nextLeaf(nullptr)
     {
-        std::fill(children, children + CHILDREN, nullptr);
+        std::fill(keys, keys + CHILDREN, T());
+        std::fill(values, values + CHILDREN, Data());
+        std::fill(children, children + CHILDREN + 1, nullptr);
     }
 };

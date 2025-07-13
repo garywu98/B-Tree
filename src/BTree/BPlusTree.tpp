@@ -11,58 +11,39 @@ BPlusTree<T, Data, CHILDREN>::BPlusTree() {
 template <typename T, typename Data, int CHILDREN>
 void BPlusTree<T, Data, CHILDREN>::insert(T key, Data value) {
     std::cout << "INSERTING " << key << "\n";
-
     Node* node = root;
-    Node* parent = nullptr;
     std::vector<Node*> path;
 
     // Traverse to leaf
-    while (!node->isLeaf) 
-    {
+    while (!node->isLeaf) {
         path.push_back(node);
         int i = 0;
-        while (i < node->numKeys && key >= node->keys[i]) 
-        {
-            i++;
+        while (i < node->numKeys && key >= node->keys[i]) {
+            ++i;
         }
-
-        parent = node;
         node = node->children[i];
     }
 
-
-    // Find insert position
-    int i = 0;
-    while (i < node->numKeys && key > node->keys[i]) 
-    {
-        i++;
+    // Insert in leaf
+    int i = node->numKeys - 1;
+    while (i >= 0 && node->keys[i] > key) {
+        node->keys[i + 1] = node->keys[i];
+        node->values[i + 1] = node->values[i];
+        --i;
     }
+    node->keys[i + 1] = key;
+    node->values[i + 1] = value;
+    ++node->numKeys;
 
-
-    // Shift keys and values
-    for (int j = node->numKeys; j > i; --j) 
-    {
-        if (j < CHILDREN - 1) {
-            node->keys[j] = node->keys[j - 1];
-            node->values[j] = node->values[j - 1];
-        }
-    }
-
-    node->keys[i] = key;
-    node->values[i] = value;
-    node->numKeys++;
-
-    // Split leaf if needed
-    if (node->numKeys == CHILDREN) 
-    {
+    // Split if needed
+    if (node->numKeys == CHILDREN) {
+        int mid = CHILDREN / 2;
         Node* newLeaf = new Node(true);
-        int mid = (CHILDREN) / 2;
 
-        newLeaf->numKeys = node->numKeys - mid;
-        for (int k = 0; k < newLeaf->numKeys; ++k) 
-        {
-            newLeaf->keys[k] = node->keys[mid + k];
-            newLeaf->values[k] = node->values[mid + k];
+        newLeaf->numKeys = CHILDREN - mid;
+        for (int j = 0; j < newLeaf->numKeys; ++j) {
+            newLeaf->keys[j] = node->keys[mid + j];
+            newLeaf->values[j] = node->values[mid + j];
         }
 
         node->numKeys = mid;
@@ -71,37 +52,64 @@ void BPlusTree<T, Data, CHILDREN>::insert(T key, Data value) {
 
         T splitKey = newLeaf->keys[0];
 
-        if (node == root) 
-        {
+        // Create new root if needed
+        if (node == root) {
             Node* newRoot = new Node(false);
             newRoot->keys[0] = splitKey;
             newRoot->children[0] = node;
             newRoot->children[1] = newLeaf;
             newRoot->numKeys = 1;
             root = newRoot;
-        } 
-        else 
-        {
-            Node* current = path.back(); path.pop_back();
-            int idx = 0;
-            while (idx < current->numKeys && splitKey > current->keys[idx]) 
-            {
-                idx++;
-            }
+        } else {
+            // Propagate split up
+            while (!path.empty()) {
+                Node* parent = path.back();
+                path.pop_back();
 
-            for (int j = current->numKeys; j > idx; --j) 
-            {
-                if (j < CHILDREN - 1) current->keys[j] = current->keys[j - 1];
-                if (j + 1 < CHILDREN) current->children[j + 1] = current->children[j];
-            }
+                int insertPos = parent->numKeys;
+                while (insertPos > 0 && parent->keys[insertPos - 1] > splitKey) {
+                    parent->keys[insertPos] = parent->keys[insertPos - 1];
+                    parent->children[insertPos + 1] = parent->children[insertPos];
+                    --insertPos;
+                }
+                parent->keys[insertPos] = splitKey;
+                parent->children[insertPos + 1] = newLeaf;
+                ++parent->numKeys;
 
-            current->keys[idx] = splitKey;
-            current->children[idx + 1] = newLeaf;
-            current->numKeys++;
+                if (parent->numKeys < CHILDREN) {
+                    return;
+                }
+
+                // If parent needs to split
+                mid = CHILDREN / 2;
+                Node* newInternal = new Node(false);
+                newInternal->numKeys = CHILDREN - mid - 1;
+
+                for (int j = 0; j < newInternal->numKeys; ++j) {
+                    newInternal->keys[j] = parent->keys[mid + 1 + j];
+                }
+                for (int j = 0; j <= newInternal->numKeys; ++j) {
+                    newInternal->children[j] = parent->children[mid + 1 + j];
+                }
+
+                splitKey = parent->keys[mid];
+                parent->numKeys = mid;
+                newLeaf = newInternal;
+
+                if (parent == root) {
+                    Node* newRoot = new Node(false);
+                    newRoot->keys[0] = splitKey;
+                    newRoot->children[0] = parent;
+                    newRoot->children[1] = newLeaf;
+                    newRoot->numKeys = 1;
+                    root = newRoot;
+                    return;
+                }
+            }
         }
     }
 
-    std::cout << "INSERTED\n";
+    std::cout << "INSERTED key = " << key << std::endl;
 }
 
 template <typename T, typename Data, int CHILDREN>
@@ -133,19 +141,22 @@ Utilize BFS to display all nodes in tree
 */
 template <typename T, typename Data, int CHILDREN>
 void BPlusTree<T, Data, CHILDREN>::display() {
+    std::cout << "Display" << "\n";
     std::queue<Node*> q;
     q.push(root);
 
     while (!q.empty()) 
     {
-        for(int i = 0; i < q.size(); i++) 
+        int sz = q.size();
+        
+        for (int i = 0; i < sz; i++)
         {
             Node* currentNode = q.front(); q.pop();
             std::cout << "[";
-            for (int i = 0; i < currentNode->numKeys; ++i) 
+            for (int j = 0; j < currentNode->numKeys; ++j) 
             {
-                std::cout << currentNode->keys[i];
-                if (i < currentNode->numKeys - 1) 
+                std::cout << currentNode->keys[j];
+                if (j < currentNode->numKeys - 1) 
                 {
                     std::cout << ",";
                 }
@@ -153,12 +164,8 @@ void BPlusTree<T, Data, CHILDREN>::display() {
             std::cout << "]";
             if (!currentNode->isLeaf) 
             {
-                for (int i = 0; i <= currentNode->numKeys; ++i) 
-                {
-                    if (currentNode->children[i]) 
-                    {
-                        q.push(currentNode->children[i]);
-                    }
+                for (int j = 0; j <= currentNode->numKeys; ++j) {
+                    q.push(currentNode->children[j]);
                 }
             }
             std::cout << " ";
