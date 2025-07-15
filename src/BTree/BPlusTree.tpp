@@ -130,6 +130,7 @@ Data* BPlusTree<T, Data, CHILDREN>::search(T key) {
     {
         if (node->keys[i] == key)
         {
+            std::cout << &node->values[i] << std::endl;
             return &node->values[i];
         }
     }
@@ -141,7 +142,7 @@ Utilize BFS to display all nodes in tree
 */
 template <typename T, typename Data, int CHILDREN>
 void BPlusTree<T, Data, CHILDREN>::display() {
-    std::cout << "Display" << "\n";
+    std::cout << "Display" << std::endl;
     std::queue<Node*> q;
     q.push(root);
 

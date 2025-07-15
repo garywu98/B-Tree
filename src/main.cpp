@@ -5,63 +5,60 @@
 #include <cstdlib>
 #include "BTree/BPlusTree.h"
 
-// void quit() {
-//     std::cout << "Terminating Program\n";
-//     // break;
-// }
+void quit() {
+    std::cout << "Terminating Program\n";
+    return;
+}
 
 int main() {
     BPlusTree<int, int, 4> tree;
 
-    tree.insert(10, 100);
-    tree.insert(20, 200);
-    tree.insert(5, 50);
-    tree.insert(15, 150);  // Causes leaf split
-    tree.insert(25, 250);  // Causes internal split if enough
+    // Example
+    // tree.insert(10, 100);
+    // tree.insert(20, 200);
+    // tree.insert(5, 50);
+    // tree.insert(15, 150);  // Causes leaf split
+    // tree.insert(25, 250);  // Causes internal split if enough
 
-    try {
-        tree.display();
-    } catch (const std::exception& e) {
-        std::cerr << "Display crashed: " << e.what() << std::endl;
+    // tree.display();
+
+    // Map input string to function
+    std::unordered_map<std::string, std::function<void()>> commands = {
+        {"display", [&]() {
+            tree.display();
+        }},
+        {"insert", [&]() {
+            int key;
+            int value;
+            std::cout << "Enter key: ";
+            std::cin >> key;
+            std::cin.ignore();
+            std::cout << "Enter value: ";
+            std::cin >> value;
+            tree.insert(key, value);
+        }},
+        {"search", [&]() {
+            int key;
+            std::cout << "Enter key: ";
+            std::cin >> key;
+            std::cout << "Found value: " << tree.search(key);
+        }},
+        {"quit", quit}
+    };
+
+    std::string input;
+
+    while (true) {
+        std::cout << "Enter a command (display, insert, search):" << std::endl;
+        std::cout << "> ";
+        std::getline(std::cin, input);
+
+        if (commands.find(input) != commands.end()) {
+            commands[input](); // Call the corresponding function
+        } else {
+            std::cout << "Unknown command.\n";
+        }
     }
-
-    // // Map string input to function
-    // std::unordered_map<std::string, std::function<void()>> commands = {
-    //     {"display", [&]() {
-    //         tree.display();
-    //     }},
-    //     {"insert", [&]() {
-    //         int key;
-    //         int value;
-    //         std::cout << "Enter key: ";
-    //         std::cin >> key;
-    //         std::cin.ignore(); // discard newline
-    //         std::cout << "Enter value: ";
-    //         std::cin >> value;
-    //         tree.insert(key, value);
-    //     }},
-    //     {"search", [&]() {
-    //         int key;
-    //         std::cout << "Enter key: ";
-    //         std::cin >> key;
-    //         std::cout << "Found value: " << tree.search(key);
-    //     }}
-    //     // {"quit", quit}
-    // };
-
-    // std::string input;
-
-    // std::cout << "Enter a command (display, insert, search):\n";
-    // while (true) {
-    //     std::cout << "> ";
-    //     std::getline(std::cin, input);
-
-    //     if (commands.find(input) != commands.end()) {
-    //         commands[input](); // Call the corresponding function
-    //     } else {
-    //         std::cout << "Unknown command.\n";
-    //     }
-    // }
 
     return 0;
 }
