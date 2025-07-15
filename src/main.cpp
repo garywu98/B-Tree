@@ -6,17 +6,19 @@
 #include <sstream>
 #include "BTree/BPlusTree.h"
 
+/*
+Example:
+tree.insert(10, 100);
+tree.insert(20, 200);
+tree.insert(5, 50);
+tree.insert(15, 150);  // Causes leaf split
+tree.insert(25, 250);  // Causes internal split if enough
+
+tree.display();
+*/
+
 int main() {
     BPlusTree<int, int, 4> tree;
-
-    // Example
-    // tree.insert(10, 100);
-    // tree.insert(20, 200);
-    // tree.insert(5, 50);
-    // tree.insert(15, 150);  // Causes leaf split
-    // tree.insert(25, 250);  // Causes internal split if enough
-
-    // tree.display();
 
     // Map input string to function
     std::unordered_map<std::string, std::function<void()>> commands = {

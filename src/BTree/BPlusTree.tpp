@@ -8,6 +8,27 @@ BPlusTree<T, Data, CHILDREN>::BPlusTree() {
     root = new Node(true);  // root is initially a leaf
 }
 
+/*
+1. Start at the root and traverse down to the appropriate leaf node:
+    - At each internal node, choose the child pointer based on the key range
+2. Insert the (key, value) pair into the leaf node in sorted order
+3. If the leaf has room (less than max keys), insertion is complete
+4. If the leaf overflows:
+    - Split the leaf into two nodes:
+        - Move half the keys to a new leaf node
+        - Copy up the **smallest key in the new node** to the parent (not move)
+        - Maintain linked leaf structure (next pointer)
+5. If the parent node also overflows:
+    - Recursively split the parent, pushing keys up the tree
+    - This may continue all the way to the root
+6. If the root splits:
+    - A new root is created with two children, increasing tree height by 1
+
+Note:
+- Values are only stored in leaf nodes
+- Internal nodes only store keys as separators to guide search
+- Leaf splits **copy up**, not push up actual keys and values
+*/
 template <typename T, typename Data, int CHILDREN>
 void BPlusTree<T, Data, CHILDREN>::insert(T key, Data value) {
     std::cout << "INSERTING " << key << "\n";
@@ -112,6 +133,18 @@ void BPlusTree<T, Data, CHILDREN>::insert(T key, Data value) {
     std::cout << "INSERTED key = " << key << std::endl;
 }
 
+/*
+1. Start at the root node
+2. At each internal node, perform a search on keys:
+     - If key < keys[i], follow child[i]
+     - If key >= all keys, follow the rightmost child
+3. Repeat until reaching a leaf node
+4. In the leaf node, search for the exact key among its keys
+     - If found, return node
+     - If not found, return nullptr
+
+Note: Only leaf nodes store actual values; internal nodes only guide the path
+*/
 template <typename T, typename Data, int CHILDREN>
 Data* BPlusTree<T, Data, CHILDREN>::search(T key) {
     Node* node = root;
@@ -120,7 +153,7 @@ Data* BPlusTree<T, Data, CHILDREN>::search(T key) {
         int i = 0;
         while (i < node->numKeys && key >= node->keys[i]) 
         {   
-            i++;
+            ++i;
         }
 
         node = node->children[i];
@@ -139,20 +172,29 @@ Data* BPlusTree<T, Data, CHILDREN>::search(T key) {
 
 /*
 Utilize BFS to display all nodes in tree
+1. Start by pushing the root node into the queue
+2. For each node in the queue (current size of queue = number of nodes in that level):
+    - Print its keys (without values if internal)
+    - Enqueue its children (if internal node)
+
+Example Output:
+[15]
+[5,10] [15,20,25]
+(Where first line is root, second line are its children)
 */
 template <typename T, typename Data, int CHILDREN>
 void BPlusTree<T, Data, CHILDREN>::display() {
-    std::cout << "Display" << std::endl;
-    std::queue<Node*> q;
-    q.push(root);
+    std::cout << "Displaying BTree" << std::endl;
+    std::queue<Node*> queue;
+    queue.push(root);
 
-    while (!q.empty()) 
+    while (!queue.empty()) 
     {
-        int sz = q.size();
+        int level = queue.size();
         
-        for (int i = 0; i < sz; i++)
+        for (int i = 0; i < level; i++)
         {
-            Node* currentNode = q.front(); q.pop();
+            Node* currentNode = queue.front(); queue.pop();
             std::cout << "[";
             for (int j = 0; j < currentNode->numKeys; ++j) 
             {
@@ -165,8 +207,9 @@ void BPlusTree<T, Data, CHILDREN>::display() {
             std::cout << "]";
             if (!currentNode->isLeaf) 
             {
-                for (int j = 0; j <= currentNode->numKeys; ++j) {
-                    q.push(currentNode->children[j]);
+                for (int j = 0; j <= currentNode->numKeys; ++j) 
+                {
+                    queue.push(currentNode->children[j]);
                 }
             }
             std::cout << " ";
