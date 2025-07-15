@@ -3,12 +3,8 @@
 #include <unordered_map>
 #include <functional>
 #include <cstdlib>
+#include <sstream>
 #include "BTree/BPlusTree.h"
-
-void quit() {
-    std::cout << "Terminating Program\n";
-    return;
-}
 
 int main() {
     BPlusTree<int, int, 4> tree;
@@ -35,28 +31,35 @@ int main() {
             std::cin.ignore();
             std::cout << "Enter value: ";
             std::cin >> value;
+            std::cin.ignore();
             tree.insert(key, value);
         }},
         {"search", [&]() {
             int key;
             std::cout << "Enter key: ";
             std::cin >> key;
+            std::cin.ignore();
             std::cout << "Found value: " << tree.search(key);
-        }},
-        {"quit", quit}
+        }}
     };
 
-    std::string input;
+    std::string command;
 
     while (true) {
-        std::cout << "Enter a command (display, insert, search):" << std::endl;
+        std::cout << "Enter a command (display, insert, search, exit):" << std::endl;
         std::cout << "> ";
-        std::getline(std::cin, input);
+        std::getline(std::cin, command);
 
-        if (commands.find(input) != commands.end()) {
-            commands[input](); // Call the corresponding function
-        } else {
-            std::cout << "Unknown command.\n";
+        if (commands.find(command) != commands.end()) 
+        {
+            commands[command]();
+        } 
+        else if(command == "exit")
+        {
+            break;
+        }
+        else {
+            std::cout << "Unknown command." << std::endl;
         }
     }
 
